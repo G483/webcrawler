@@ -1,0 +1,23 @@
+{
+  "name": "webcrawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/G483/webcrawler.git"
+  },
+  "author": "Gabrijel Anic",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/G483/webcrawler/issues"
+  },
+  "homepage": "https://github.com/G483/webcrawler#readme",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
