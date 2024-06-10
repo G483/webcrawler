@@ -36,7 +36,29 @@ function normalizeURL(urlString) {
     return hostPath
 }
 
+async function crawlPage(baseURL) {
+    let response
+    try {
+        response = await fetch(baseURL)
+    } catch (err) {
+        console.log(`Error fetching page: ${err.message}`)
+    }
+
+    if (response.status > 399) {
+        throw new Error(`Failed to fetch page: ${response.statusText}`)
+    } 
+
+    if (response?.headers.get('content-type') !== 'text/html; charset=utf-8') {
+        throw new Error(`Page is not HTML: ${response.headers.get('content-type')}`)
+    }
+        
+    const html = await response.text()
+
+    return html;
+}
+
 module.exports = {
     normalizeURL,
-    getURLsFromHTML
+    getURLsFromHTML,
+    crawlPage
 }

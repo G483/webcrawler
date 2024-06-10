@@ -35,7 +35,6 @@ test('getURLsFromHTML returns an array of urls', () => {
     expect(actual).toEqual(expected)
 })
 
-
 test('getURLsFromHTML returns full urls from relative path', () => {
     const html = `
 <html>
