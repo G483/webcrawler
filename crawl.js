@@ -1,5 +1,49 @@
 const { JSDOM } = require('jsdom')
 
+async function crawlPage(baseURL, currentURL = baseURL, pages = {}) {
+    let response
+    const baseURLObj = new URL(baseURL)
+    const currentURLObj = new URL(currentURL)
+
+    if (baseURLObj.hostname !== currentURLObj.hostname) {
+        return pages
+    }
+
+    const currentNormalizedURL = normalizeURL(currentURL)
+    if (pages[currentNormalizedURL] > 0) {
+       pages[currentNormalizedURL]++
+
+       return pages
+    } 
+    
+    pages[currentNormalizedURL] = 1
+
+    try {
+        console.log(`Fetching current url: ${currentURL}`)
+        response = await fetch(currentURL)
+        if (response.status > 399) {
+            console.log(`The server responded with an error: ${response.statusText}`)
+            return pages
+        } 
+
+        if (response?.headers.get('content-type') !== 'text/html; charset=utf-8') {
+            console.log(`Page is not HTML: ${response.headers.get('content-type')}`)
+            return pages
+        }
+
+        const html = await response.text()
+        const URLsToCrawl = getURLsFromHTML(html, currentURL)
+
+        for (const url of URLsToCrawl) {
+            pages = await crawlPage(baseURL, url, pages)
+        }
+    } catch (err) {
+        console.log(`Error fetching page: ${err.message}`)
+    }
+
+    return pages
+}
+
 function getURLsFromHTML(htmlString, baseURL) {
     const html = new JSDOM(htmlString)
     const urls = []
@@ -7,18 +51,20 @@ function getURLsFromHTML(htmlString, baseURL) {
         const href = element.getAttribute('href')
         if (href && href.startsWith('/')) {
             try {
-                const url = new URL(`${baseURL}${href}`)
+                const url = new URL(href, baseURL)
                 urls.push(url.toString())
+                return
             } catch (e) {
-                console.log(`Invalid URL: ${href}`)
+                console.log(`Invalid URL: ${href} - Error: ${err.message}`) 
+                return
             } 
-        } else {
-            try {
-                const url = new URL(href)
-                urls.push(url.toString())
-            } catch (e) {
-                console.log(`Invalid URL: ${href}`) 
-            }
+        } 
+
+        try {
+            const url = new URL(href)
+            urls.push(url.toString())
+        } catch (err) {
+            console.log(`Invalid URL: ${href} - Error: ${err.message}`) 
         }
     })
 
@@ -34,27 +80,6 @@ function normalizeURL(urlString) {
     }
 
     return hostPath
-}
-
-async function crawlPage(baseURL) {
-    let response
-    try {
-        response = await fetch(baseURL)
-    } catch (err) {
-        console.log(`Error fetching page: ${err.message}`)
-    }
-
-    if (response.status > 399) {
-        throw new Error(`Failed to fetch page: ${response.statusText}`)
-    } 
-
-    if (response?.headers.get('content-type') !== 'text/html; charset=utf-8') {
-        throw new Error(`Page is not HTML: ${response.headers.get('content-type')}`)
-    }
-        
-    const html = await response.text()
-
-    return html;
 }
 
 module.exports = {

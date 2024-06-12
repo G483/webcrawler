@@ -12,8 +12,13 @@ async function main() {
         process.exit(1)
     } 
 
-    const html = await crawlPage(argv[2])
-    console.log(html)
+    const baseURL = argv[2];
+
+    const pages = await crawlPage(baseURL, baseURL, {})
+    console.log('Final output')
+    for (const page of Object.entries(pages)) {
+        console.log(page)
+    }
 }
 
 main()
